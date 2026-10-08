@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>簡易視譜練習</title>
+    <style>
+      :root {
+        color: #24344f;
+        background: #f6f3ed;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; }
+      main { margin: 0 auto; max-width: 700px; padding: 28px 16px 44px; }
+      header { margin-bottom: 22px; }
+      h1, h2, p { margin: 0; }
+      h1 { font-size: clamp(28px, 7vw, 42px); letter-spacing: -1px; }
+      header p { color: #68758a; font-size: 14px; line-height: 1.6; margin-top: 8px; }
+      .card { background: #fff; border: 1px solid #e4e0d8; border-radius: 22px; box-shadow: 0 12px 35px rgba(36, 52, 79, .08); padding: 20px; }
+      .topline, .answer-heading { align-items: center; display: flex; justify-content: space-between; gap: 12px; }
+      .topline { color: #68758a; font-size: 13px; margin-bottom: 16px; }
+      .score { color: #24344f; font-weight: 800; }
+      .staff { background: #fcfbf8; border: 1px solid #efebe3; border-radius: 15px; margin-bottom: 24px; overflow: hidden; padding: 10px 3px; }
+      svg { display: block; height: auto; width: 100%; }
+      .staff-lines line, .ledger-lines line { stroke: #24344f; stroke-width: 2; }
+      .clef { fill: #24344f; font-family: Georgia, serif; font-size: 125px; }
+      .note-shape { fill: #24344f; transition: transform 220ms ease; }
+      .note-shape ellipse { transform: rotate(-16deg); transform-origin: 430px 115px; }
+      .note-shape .stem { stroke: #24344f; stroke-width: 5; }
+      .answer-group { margin-top: 20px; }
+      .answer-heading { font-size: 14px; font-weight: 800; margin-bottom: 9px; }
+      .answer-state { color: #8994a5; font-size: 12px; font-weight: 600; }
+      .answer-grid { display: grid; gap: 8px; grid-template-columns: repeat(7, 1fr); }
+      button { font: inherit; }
+      .answer-button { background: #eef0fb; border: 1px solid transparent; border-radius: 11px; color: #24344f; cursor: pointer; font-size: 18px; font-weight: 800; min-height: 52px; touch-action: manipulation; }
+      .solfege-group .answer-button { background: #fff5d9; }
+      .answer-button:focus-visible, .next-button:focus-visible { outline: 3px solid #e57d6d; outline-offset: 2px; }
+      .answer-button:hover:not(:disabled) { border-color: #24344f; }
+      .answer-button.is-selected { background: #24344f; color: #fff; }
+      .solfege-group .answer-button.is-selected { background: #ad7921; }
+      .answer-button:disabled { cursor: default; opacity: .75; }
+      .answer-button.is-correct { background: #38945f !important; border-color: #38945f; color: #fff; opacity: 1; }
+      .answer-button.is-wrong { background: #d76259 !important; border-color: #d76259; color: #fff; opacity: 1; }
+      .feedback { border-radius: 12px; font-size: 14px; line-height: 1.6; margin-top: 20px; padding: 12px 14px; }
+      .feedback.correct { background: #e4f4e9; color: #246b43; }
+      .feedback.wrong { background: #fde9e6; color: #a8423b; }
+      .next-button { background: #24344f; border: 0; border-radius: 11px; color: #fff; cursor: pointer; display: block; font-size: 14px; font-weight: 800; margin: 14px 0 0 auto; min-height: 46px; padding: 0 17px; }
+      .next-button:hover { background: #375174; }
+      .complete { text-align: center; }
+      .complete h2 { font-size: 28px; }
+      .complete p { color: #68758a; line-height: 1.7; margin-top: 10px; }
+      .complete strong { color: #24344f; }
+      .complete .next-button { margin: 24px auto 0; }
+      [hidden] { display: none !important; }
+      @media (max-width: 420px) {
+        main { padding-left: 12px; padding-right: 12px; }
+        .card { border-radius: 18px; padding: 15px; }
+        .answer-button { min-height: 48px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>簡易視譜練習</h1>
+        <p>看高音譜號，選出音符代號與 Do–Si 音名。這個版本不儲存任何練習紀錄。</p>
+      </header>
+
+      <section class="card" id="practice" aria-labelledby="question-title">
+        <div class="topline">
+          <span id="round">第 1 / 10 題</span>
+          <span class="score" id="score">本輪答對 0 題</span>
+        </div>
+        <h2 id="question-title" hidden>辨認五線譜上的音符</h2>
+        <div class="staff">
+          <svg viewBox="0 0 760 250" role="img" aria-labelledby="staff-title">
+            <title id="staff-title">高音譜號與待辨識音符</title>
+            <g class="staff-lines">
+              <line x1="70" y1="75" x2="710" y2="75" />
+              <line x1="70" y1="95" x2="710" y2="95" />
+              <line x1="70" y1="115" x2="710" y2="115" />
+              <line x1="70" y1="135" x2="710" y2="135" />
+              <line x1="70" y1="155" x2="710" y2="155" />
+            </g>
+            <text class="clef" x="87" y="158">𝄞</text>
+            <g id="ledger-lines" class="ledger-lines"></g>
+            <g id="note-shape" class="note-shape">
+              <ellipse cx="430" cy="115" rx="13" ry="9" />
+              <line class="stem" x1="446" y1="115" x2="446" y2="49" />
+            </g>
+          </svg>
+        </div>
+
+        <div class="answer-group" aria-labelledby="letter-label">
+          <div class="answer-heading"><span id="letter-label">音符代號</span><span class="answer-state" id="letter-state">尚未選擇</span></div>
+          <div class="answer-grid" id="letter-options"></div>
+        </div>
+        <div class="answer-group solfege-group" aria-labelledby="solfege-label">
+          <div class="answer-heading"><span id="solfege-label">音名</span><span class="answer-state" id="solfege-state">尚未選擇</span></div>
+          <div class="answer-grid" id="solfege-options"></div>
+        </div>
+
+        <div class="feedback" id="feedback" aria-live="polite" hidden></div>
+        <button class="next-button" id="next" type="button" hidden>下一題 →</button>
+      </section>
+
+      <section class="card complete" id="complete" aria-live="polite" hidden>
+        <h2>本輪完成！</h2>
+        <p>你答對了 <strong id="final-score">0 / 10</strong> 題。重新開始後，題目與分數都會重新計算。</p>
+        <button class="next-button" id="restart" type="button">再來一輪</button>
+      </section>
+    </main>
+
+    <script>
+      const LETTERS = ["A", "B", "C", "D", "E", "F", "G"];
+      const SOLFEGE = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
+      const TOTAL_QUESTIONS = 10;
+      const NOTE_NAMES = [["C", "Do"], ["D", "Re"], ["E", "Mi"], ["F", "Fa"], ["G", "Sol"], ["A", "La"], ["B", "Si"]];
+      const NOTE_INDEX = Object.fromEntries(NOTE_NAMES.map(([letter], index) => [letter, index]));
+      const state = { question: null, selected: {}, answered: false, round: 1, score: 0, previousId: null };
+      const $ = (selector) => document.querySelector(selector);
+
+      function buildNotes([startLetter, startOctave], [endLetter, endOctave]) {
+        const start = startOctave * 7 + NOTE_INDEX[startLetter];
+        const end = endOctave * 7 + NOTE_INDEX[endLetter];
+        const notes = [];
+        for (let octave = 3; octave <= 6; octave += 1) {
+          for (const [letter, solfege] of NOTE_NAMES) {
+            const index = octave * 7 + NOTE_INDEX[letter];
+            if (index >= start && index <= end) {
+              notes.push({ id: `${letter}${octave}`, letter, solfege, staffPosition: (octave - 4) * 7 + NOTE_INDEX[letter] - 2 });
+            }
+          }
+        }
+        return notes;
+      }
+
+      const NOTES = buildNotes(["G", 3], ["E", 6]);
+      console.assert(NOTES.length === 20, "The practice range should contain 20 notes.");
+
+      function newQuestion() {
+        const choices = NOTES.filter((note) => note.id !== state.previousId);
+        state.question = choices[Math.floor(Math.random() * choices.length)];
+        state.previousId = state.question.id;
+        state.selected = {};
+        state.answered = false;
+        $("#round").textContent = `第 ${state.round} / ${TOTAL_QUESTIONS} 題`;
+        $("#score").textContent = `本輪答對 ${state.score} 題`;
+        $("#letter-state").textContent = "尚未選擇";
+        $("#solfege-state").textContent = "尚未選擇";
+        $("#feedback").hidden = true;
+        $("#next").hidden = true;
+        $("#next").textContent = state.round === TOTAL_QUESTIONS ? "完成本輪 →" : "下一題 →";
+        setNotePosition(state.question.staffPosition);
+        renderOptions();
+      }
+
+      function renderOptions() {
+        const groups = [["letter", LETTERS], ["solfege", SOLFEGE]];
+        for (const [group, values] of groups) {
+          const container = $(`#${group}-options`);
+          container.replaceChildren(...values.map((value) => {
+            const button = document.createElement("button");
+            button.className = "answer-button";
+            button.type = "button";
+            button.textContent = value;
+            button.addEventListener("click", () => selectAnswer(group, value, button));
+            return button;
+          }));
+        }
+      }
+
+      function setNotePosition(position) {
+        const y = 155 - position * 10;
+        $("#note-shape").setAttribute("transform", `translate(0 ${y - 115})`);
+        const stemDown = position >= 5;
+        $("#note-shape .stem").setAttribute("x1", stemDown ? "417" : "443");
+        $("#note-shape .stem").setAttribute("x2", stemDown ? "417" : "443");
+        $("#note-shape .stem").setAttribute("y2", stemDown ? "181" : "49");
+        $("#ledger-lines").replaceChildren();
+        const positions = [];
+        if (position < 0) for (let current = -2; current >= position; current -= 2) positions.push(current);
+        if (position > 8) for (let current = 10; current <= position; current += 2) positions.push(current);
+        for (const ledgerPosition of positions) {
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          const ledgerY = 155 - ledgerPosition * 10;
+          line.setAttribute("x1", "402");
+          line.setAttribute("x2", "458");
+          line.setAttribute("y1", ledgerY);
+          line.setAttribute("y2", ledgerY);
+          $("#ledger-lines").append(line);
+        }
+      }
+
+      function selectAnswer(group, value, button) {
+        if (state.answered) return;
+        document.querySelectorAll(`#${group}-options .answer-button`).forEach((option) => option.classList.remove("is-selected"));
+        button.classList.add("is-selected");
+        state.selected[group] = value;
+        $(`#${group}-state`).textContent = value;
+        if (state.selected.letter && state.selected.solfege) checkAnswer();
+      }
+
+      function checkAnswer() {
+        state.answered = true;
+        const letterCorrect = state.selected.letter === state.question.letter;
+        const solfegeCorrect = state.selected.solfege === state.question.solfege;
+        const fullyCorrect = letterCorrect && solfegeCorrect;
+        if (fullyCorrect) state.score += 1;
+        document.querySelectorAll(".answer-button").forEach((button) => {
+          const group = button.parentElement.id.startsWith("letter") ? "letter" : "solfege";
+          const correct = group === "letter" ? state.question.letter : state.question.solfege;
+          button.disabled = true;
+          button.classList.toggle("is-correct", button.textContent === correct);
+          button.classList.toggle("is-wrong", button.textContent === state.selected[group] && button.textContent !== correct);
+        });
+        const feedback = $("#feedback");
+        feedback.className = `feedback ${fullyCorrect ? "correct" : "wrong"}`;
+        feedback.textContent = fullyCorrect
+          ? `答對了！${state.question.letter} 是 ${state.question.solfege}。`
+          : `答案是 ${state.question.letter}／${state.question.solfege}。`;
+        feedback.hidden = false;
+        $("#score").textContent = `本輪答對 ${state.score} 題`;
+        $("#next").hidden = false;
+      }
+
+      function nextQuestion() {
+        if (!state.answered) return;
+        if (state.round === TOTAL_QUESTIONS) {
+          $("#practice").hidden = true;
+          $("#final-score").textContent = `${state.score} / ${TOTAL_QUESTIONS}`;
+          $("#complete").hidden = false;
+          return;
+        }
+        state.round += 1;
+        newQuestion();
+      }
+
+      function restart() {
+        state.round = 1;
+        state.score = 0;
+        state.previousId = null;
+        $("#practice").hidden = false;
+        $("#complete").hidden = true;
+        newQuestion();
+      }
+
+      $("#next").addEventListener("click", nextQuestion);
+      $("#restart").addEventListener("click", restart);
+      newQuestion();
+    </script>
+  </body>
+</html>

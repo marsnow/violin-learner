@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sightline｜視譜練習</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主要導覽">
+        <a class="brand" href="/">Sightline</a>
+        <nav>
+          <a class="nav-item is-active" href="#practice" data-view="practice"><span class="nav-icon">♬</span>視譜練習</a>
+          <a class="nav-item" href="#progress" data-view="progress"><span class="nav-icon">▥</span>學習進度</a>
+        </nav>
+        <div class="sidebar-note">每天幾分鐘，讓讀譜變成直覺。</div>
+      </aside>
+
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1 id="page-title">視譜練習</h1>
+          </div>
+        </header>
+
+        <div id="practice-view" class="view">
+          <div id="practice-content">
+            <div class="level-toolbar" id="practice-toolbar">
+              <div class="level-toolbar-copy">
+                <span>目前關卡</span>
+                <strong id="level-label">第一把位</strong>
+                <small id="level-summary">載入關卡中…</small>
+              </div>
+              <button class="level-open-button" id="open-level-modal" type="button">選擇關卡 <span>↗</span></button>
+            </div>
+            <div class="content-grid">
+            <section class="practice-card" id="practice" aria-labelledby="question-title">
+            <div class="practice-heading">
+              <div>
+                <p class="section-label">ROUND · 第 <span id="round-number">01</span> / 20 題</p>
+                <h2 id="question-title">這個音符是什麼？</h2>
+              </div>
+              <span class="status-chip" id="question-status">請選擇兩個答案</span>
+            </div>
+
+            <div class="staff-frame" aria-label="待辨識的五線譜音符">
+              <svg id="staff" viewBox="0 0 760 250" role="img" aria-labelledby="staff-title">
+                <title id="staff-title">高音譜號與待辨識音符</title>
+                <g class="staff-lines">
+                  <line x1="70" y1="75" x2="710" y2="75"></line>
+                  <line x1="70" y1="95" x2="710" y2="95"></line>
+                  <line x1="70" y1="115" x2="710" y2="115"></line>
+                  <line x1="70" y1="135" x2="710" y2="135"></line>
+                  <line x1="70" y1="155" x2="710" y2="155"></line>
+                </g>
+                <text class="clef" x="87" y="158">𝄞</text>
+                <g id="ledger-lines" class="ledger-lines"></g>
+                <g id="note-shape" class="note-shape">
+                  <ellipse cx="430" cy="115" rx="13" ry="9"></ellipse>
+                  <line class="stem" x1="446" y1="115" x2="446" y2="49"></line>
+                </g>
+              </svg>
+            </div>
+
+            <div class="answer-group letter-group" aria-labelledby="letter-label">
+              <div class="answer-heading"><span id="letter-label">選音符代號</span><span class="answer-state" id="letter-state">尚未選擇</span></div>
+              <div class="answer-grid" id="letter-options"></div>
+            </div>
+            <div class="answer-group solfege-group" aria-labelledby="solfege-label">
+              <div class="answer-heading"><span id="solfege-label">選音名</span><span class="answer-state" id="solfege-state">尚未選擇</span></div>
+              <div class="answer-grid" id="solfege-options"></div>
+            </div>
+
+            <div class="feedback" id="feedback" aria-live="polite" hidden></div>
+            <button class="next-button" id="next-button" type="button" hidden>下一題 <span>→</span></button>
+            </section>
+
+            <aside class="report-column" id="report" aria-label="學習報表">
+            <section class="report-card summary-card">
+              <div class="card-heading"><h2>本次答題</h2><span class="mini-spark">↗</span></div>
+              <div class="summary-layout">
+                <div class="donut" id="donut"><div class="donut-center"><strong id="correct-count">0</strong><span id="attempt-count">/ 0</span><small>全對</small></div></div>
+                <div class="summary-stats">
+                  <div><span>正確率</span><strong id="accuracy">0%</strong></div>
+                  <div><span>代號答對</span><strong id="letter-correct">0</strong></div>
+                  <div><span>音名答對</span><strong id="solfege-correct">0</strong></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="report-card mistakes-card">
+              <div class="card-heading"><div><h2>常錯音符</h2><p>錯誤越多，之後出題機率越高</p></div><span class="card-count" id="mistake-count">0</span></div>
+              <div class="mistake-list" id="mistake-list"></div>
+            </section>
+            </aside>
+            </div>
+
+            <section class="info-strip" id="help">
+            <span class="info-icon">i</span>
+            <p><span id="range-text">目前範圍：G3–B5</span>（自然音）。每題必須同時選出正確的 A–G 代號和 Do–Si 音名，才會計為全對。</p>
+            </section>
+          </div>
+          <section id="completion-screen" class="completion-screen" aria-labelledby="completion-title" hidden>
+            <div class="completion-mark">✓</div>
+            <p class="section-label">LEVEL COMPLETE</p>
+            <h2 id="completion-title">關卡完成！</h2>
+            <p id="completion-message">你完成了本關 20 題。</p>
+            <div class="completion-actions">
+              <button class="level-open-button" id="completion-open-levels" type="button">選擇其他關卡 <span>↗</span></button>
+              <button class="completion-secondary-button" id="completion-open-progress" type="button">查看學習進度 <span>→</span></button>
+            </div>
+          </section>
+        </div>
+
+        <section id="progress-view" class="progress-view" aria-labelledby="progress-title" hidden>
+          <div class="progress-page-heading">
+            <div>
+              <p class="section-label">LEARNING PROGRESS</p>
+              <h2 id="progress-title">學習進度</h2>
+              <p>依關卡查看答題次數、正確率與錯題數。</p>
+            </div>
+            <button class="level-open-button" id="progress-level-button" type="button">進入關卡 <span>→</span></button>
+          </div>
+          <div class="dashboard-kpis">
+            <article class="dashboard-kpi"><span>總答題</span><strong id="dashboard-attempts">0</strong><small>所有關卡累計</small></article>
+            <article class="dashboard-kpi"><span>整體正確率</span><strong id="dashboard-accuracy">0%</strong><small>全對才算正確</small></article>
+            <article class="dashboard-kpi"><span>完成關卡</span><strong id="dashboard-completed">0 / 10</strong><small>每關 20 題</small></article>
+            <article class="dashboard-kpi"><span>錯題累計</span><strong id="dashboard-mistakes">0</strong><small>可用來調整出題</small></article>
+          </div>
+          <section class="dashboard-panel" aria-labelledby="level-overview-title">
+            <div class="dashboard-panel-heading"><div><h3 id="level-overview-title">關卡完成度</h3><p>每一列代表一個可自由進入的關卡。</p></div><span>20 題／關</span></div>
+            <div class="dashboard-level-overview" id="dashboard-level-overview"></div>
+          </section>
+          <div class="dashboard-groups">
+            <section class="progress-group" aria-labelledby="position-progress-title">
+              <div class="progress-group-heading"><h3 id="position-progress-title">把位關卡</h3><span>第一至第七把位</span></div>
+              <div class="progress-grid" id="position-progress"></div>
+            </section>
+            <section class="progress-group" aria-labelledby="review-progress-title">
+              <div class="progress-group-heading"><h3 id="review-progress-title">複習關卡</h3><span>階段複習與總複習</span></div>
+              <div class="progress-grid" id="review-progress"></div>
+            </section>
+          </div>
+        </section>
+
+        <div class="level-modal-backdrop" id="level-modal" hidden>
+          <section class="level-modal" role="dialog" aria-modal="true" aria-labelledby="levels-title">
+            <div class="level-modal-heading">
+              <div><p class="section-label">CHALLENGE MAP</p><h2 id="levels-title">選擇關卡</h2><p>每關 20 題，可以自由進入挑戰。</p></div>
+              <button class="modal-close" id="close-level-modal" type="button" aria-label="關閉關卡選擇">×</button>
+            </div>
+            <div class="level-list" id="level-list"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
