@@ -1,6 +1,17 @@
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G"];
 const SOLFEGE = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
 const TOTAL_QUESTIONS = 20;
+const REFERENCE_FREQUENCY = 442;
+const TUNING_OFFSET_SEMITONES = 12 * Math.log2(REFERENCE_FREQUENCY / 440);
+const SOUNDFONT_NOTES = [
+  "G3", "A3", "B3",
+  "C4", "D4", "E4", "F4", "G4", "A4", "B4",
+  "C5", "D5", "E5", "F5", "G5", "A5", "B5",
+  "C6", "D6", "E6", "F6", "G6", "A6", "B6",
+];
+const NOTE_SEMITONES = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+let audioContext = null;
+const instrumentPromises = new Map();
 
 const state = {
   question: null,
@@ -49,6 +60,9 @@ const elements = {
   noteShape: document.querySelector("#note-shape"),
   ledgerLines: document.querySelector("#ledger-lines"),
   stem: document.querySelector("#note-shape .stem"),
+  pianoButton: document.querySelector("#piano-button"),
+  violinButton: document.querySelector("#violin-button"),
+  noteFrequency: document.querySelector("#note-frequency"),
   correctCount: document.querySelector("#correct-count"),
   attemptCount: document.querySelector("#attempt-count"),
   accuracy: document.querySelector("#accuracy"),
@@ -73,6 +87,71 @@ function createOption(group, value, label) {
 function renderOptions() {
   elements.letterOptions.replaceChildren(...LETTERS.map((value) => createOption("letter", value, value)));
   elements.solfegeOptions.replaceChildren(...SOLFEGE.map((value) => createOption("solfege", value, value)));
+}
+
+console.assert(SOUNDFONT_NOTES.includes("A4"), "The soundfont range should include A4.");
+
+function noteMidi(noteId) {
+  const match = /^([A-G])(\d)$/.exec(noteId);
+  return match ? (Number(match[2]) + 1) * 12 + NOTE_SEMITONES[match[1]] : null;
+}
+
+function noteFrequency(noteId) {
+  const midi = noteMidi(noteId);
+  return midi === null ? null : REFERENCE_FREQUENCY * 2 ** ((midi - 69) / 12);
+}
+
+console.assert(Math.abs(noteFrequency("A4") - REFERENCE_FREQUENCY) < 0.001, "A4 should match the reference frequency.");
+
+function updateAudioButtons() {
+  const noteId = state.question?.id;
+  const frequency = noteId ? noteFrequency(noteId) : null;
+  elements.noteFrequency.textContent = frequency ? `${frequency.toFixed(2)} Hz` : "-- Hz";
+  elements.noteFrequency.setAttribute("aria-label", frequency ? `題目頻率 ${frequency.toFixed(2)} Hz` : "尚無題目頻率");
+  [
+    [elements.pianoButton, "鋼琴"],
+    [elements.violinButton, "小提琴"],
+  ].forEach(([button, instrument]) => {
+    button.disabled = !noteId;
+    button.setAttribute("aria-label", noteId ? `播放 ${noteId} 的${instrument}音色` : `播放${instrument}音色`);
+    button.title = noteId ? `播放 ${noteId} 的${instrument}音色` : `播放${instrument}音色`;
+  });
+}
+
+async function loadInstrument(instrumentName) {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext || !window.Soundfont) throw new Error("Sampled audio is not supported");
+  audioContext ||= new AudioContext();
+  if (!instrumentPromises.has(instrumentName)) {
+    instrumentPromises.set(instrumentName, Soundfont.instrument(audioContext, instrumentName, {
+      soundfont: "FluidR3_GM",
+      format: "mp3",
+      notes: SOUNDFONT_NOTES,
+      nameToUrl: (name, soundfont, format) => `https://gleitz.github.io/midi-js-soundfonts/${soundfont}/${name}-${format}.js`,
+    }));
+  }
+  try {
+    return await instrumentPromises.get(instrumentName);
+  } catch (error) {
+    instrumentPromises.delete(instrumentName);
+    throw error;
+  }
+}
+
+async function playQuestionSound(instrument) {
+  if (!state.question) return;
+  const button = instrument === "piano" ? elements.pianoButton : elements.violinButton;
+  const instrumentName = instrument === "piano" ? "acoustic_grand_piano" : "violin";
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  try {
+    const player = await loadInstrument(instrumentName);
+    await audioContext.resume();
+    player.play(noteMidi(state.question.id) + TUNING_OFFSET_SEMITONES, undefined, { duration: instrument === "piano" ? 1.4 : 1.8 });
+  } finally {
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+  }
 }
 
 function renderLevels() {
@@ -200,6 +279,7 @@ async function loadQuestion() {
   elements.feedback.hidden = true;
   elements.nextButton.hidden = true;
   elements.nextButton.textContent = state.questionNumber === TOTAL_QUESTIONS ? "完成關卡 →" : "下一題 →";
+  updateAudioButtons();
   setNotePosition(state.question.staff_position);
   renderOptions();
 }
@@ -335,6 +415,8 @@ function showError(message) {
   elements.feedback.hidden = false;
 }
 
+elements.pianoButton.addEventListener("click", () => playQuestionSound("piano").catch(() => showError("無法播放鋼琴音色，請再試一次。")));
+elements.violinButton.addEventListener("click", () => playQuestionSound("violin").catch(() => showError("無法播放小提琴音色，請再試一次。")));
 elements.nextButton.addEventListener("click", () => handleNext().catch(() => showError("無法載入下一題。")));
 elements.openLevelModal.addEventListener("click", openLevelModal);
 elements.progressLevelButton.addEventListener("click", openLevelModal);

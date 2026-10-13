@@ -35,6 +35,12 @@ python3 -m http.server 8080 --directory docs
 - SQLite 儲存每次答題、兩組答案是否正確，以及是否全對。
 - 報表顯示總正確率、兩組答案正確數與常錯音符。
 - 錯誤越多的音符，下一次被抽到的權重越高。
+- 題目可播放 FluidR3_GM 的鋼琴與小提琴取樣音色。
+
+## 聲音資源與授權
+
+- `soundfont-player@0.12.0`：MIT License，透過 CDN 載入。
+- FluidR3_GM 取樣音色：Creative Commons Attribution 3.0，透過 `midi-js-soundfonts` 的 HTTPS 資源載入；使用時請保留本段 attribution。
 
 ## 測試
 

@@ -21,7 +21,14 @@
       .topline, .answer-heading { align-items: center; display: flex; justify-content: space-between; gap: 12px; }
       .topline { color: #68758a; font-size: 13px; margin-bottom: 16px; }
       .score { color: #24344f; font-weight: 800; }
-      .staff { background: #fcfbf8; border: 1px solid #efebe3; border-radius: 15px; margin-bottom: 24px; overflow: hidden; padding: 10px 3px; }
+      .staff { background: #fcfbf8; border: 1px solid #efebe3; border-radius: 15px; margin-bottom: 24px; overflow: hidden; padding: 50px 3px 10px; position: relative; }
+      .staff-audio-controls { display: flex; gap: 7px; position: absolute; right: 10px; top: 9px; }
+      .note-frequency { align-items: center; color: #68758a; display: inline-flex; font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 750; min-height: 36px; white-space: nowrap; }
+      .staff-audio-button { align-items: center; background: #fff; border: 1px solid #d8dce6; border-radius: 9px; color: #24344f; cursor: pointer; display: inline-flex; font-size: 11px; font-weight: 750; gap: 5px; min-height: 36px; padding: 0 9px; }
+      .staff-audio-button:hover:not(:disabled) { border-color: #24344f; transform: translateY(-1px); }
+      .staff-audio-button:focus-visible { outline: 3px solid #e57d6d; outline-offset: 2px; }
+      .staff-audio-button:disabled { cursor: default; opacity: .45; }
+      .staff-audio-button span:first-child { font-size: 17px; line-height: 1; }
       svg { display: block; height: auto; width: 100%; }
       .staff-lines line, .ledger-lines line { stroke: #24344f; stroke-width: 2; }
       .clef { fill: #24344f; font-family: Georgia, serif; font-size: 125px; }
@@ -56,6 +63,7 @@
       @media (max-width: 420px) {
         main { padding-left: 12px; padding-right: 12px; }
         .card { border-radius: 18px; padding: 15px; }
+        .staff { padding-top: 48px; }
         .answer-button { min-height: 48px; }
       }
     </style>
@@ -74,6 +82,11 @@
         </div>
         <h2 id="question-title" hidden>辨認五線譜上的音符</h2>
         <div class="staff">
+          <div class="staff-audio-controls" role="group" aria-label="播放題目音高">
+            <span class="note-frequency" id="note-frequency" aria-live="polite">-- Hz</span>
+            <button class="staff-audio-button" id="piano-button" type="button" aria-label="播放鋼琴音色" title="播放鋼琴音色"><span aria-hidden="true">🎹</span><span>鋼琴</span></button>
+            <button class="staff-audio-button" id="violin-button" type="button" aria-label="播放小提琴音色" title="播放小提琴音色"><span aria-hidden="true">🎻</span><span>小提琴</span></button>
+          </div>
           <svg viewBox="0 0 760 250" role="img" aria-labelledby="staff-title">
             <title id="staff-title">高音譜號與待辨識音符</title>
             <g class="staff-lines">
@@ -112,13 +125,25 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/soundfont-player@0.12.0/dist/soundfont-player.min.js"></script>
     <script>
       const LETTERS = ["A", "B", "C", "D", "E", "F", "G"];
       const SOLFEGE = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
       const TOTAL_QUESTIONS = 10;
+      const REFERENCE_FREQUENCY = 442;
+      const TUNING_OFFSET_SEMITONES = 12 * Math.log2(REFERENCE_FREQUENCY / 440);
       const NOTE_NAMES = [["C", "Do"], ["D", "Re"], ["E", "Mi"], ["F", "Fa"], ["G", "Sol"], ["A", "La"], ["B", "Si"]];
+      const SOUNDFONT_NOTES = [
+        "G3", "A3", "B3",
+        "C4", "D4", "E4", "F4", "G4", "A4", "B4",
+        "C5", "D5", "E5", "F5", "G5", "A5", "B5",
+        "C6", "D6", "E6", "F6", "G6", "A6", "B6",
+      ];
+      const NOTE_SEMITONES = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
       const NOTE_INDEX = Object.fromEntries(NOTE_NAMES.map(([letter], index) => [letter, index]));
       const state = { question: null, selected: {}, answered: false, round: 1, score: 0, previousId: null };
+      let audioContext = null;
+      const instrumentPromises = new Map();
       const $ = (selector) => document.querySelector(selector);
 
       function buildNotes([startLetter, startOctave], [endLetter, endOctave]) {
@@ -138,6 +163,67 @@
 
       const NOTES = buildNotes(["G", 3], ["E", 6]);
       console.assert(NOTES.length === 20, "The practice range should contain 20 notes.");
+      console.assert(SOUNDFONT_NOTES.includes("A4"), "The soundfont range should include A4.");
+
+      function noteMidi(noteId) {
+        const match = /^([A-G])(\d)$/.exec(noteId);
+        return match ? (Number(match[2]) + 1) * 12 + NOTE_SEMITONES[match[1]] : null;
+      }
+
+      function noteFrequency(noteId) {
+        const midi = noteMidi(noteId);
+        return midi === null ? null : REFERENCE_FREQUENCY * 2 ** ((midi - 69) / 12);
+      }
+
+      console.assert(Math.abs(noteFrequency("A4") - REFERENCE_FREQUENCY) < 0.001, "A4 should match the reference frequency.");
+
+      function updateAudioButtons() {
+        const noteId = state.question?.id;
+        const frequency = noteId ? noteFrequency(noteId) : null;
+        $("#note-frequency").textContent = frequency ? `${frequency.toFixed(2)} Hz` : "-- Hz";
+        $("#note-frequency").setAttribute("aria-label", frequency ? `題目頻率 ${frequency.toFixed(2)} Hz` : "尚無題目頻率");
+        [[$("#piano-button"), "鋼琴"], [$("#violin-button"), "小提琴"]].forEach(([button, instrument]) => {
+          button.disabled = !noteId;
+          button.setAttribute("aria-label", noteId ? `播放 ${noteId} 的${instrument}音色` : `播放${instrument}音色`);
+          button.title = noteId ? `播放 ${noteId} 的${instrument}音色` : `播放${instrument}音色`;
+        });
+      }
+
+      async function loadInstrument(instrumentName) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext || !window.Soundfont) throw new Error("Sampled audio is not supported");
+        audioContext ||= new AudioContext();
+        if (!instrumentPromises.has(instrumentName)) {
+          instrumentPromises.set(instrumentName, Soundfont.instrument(audioContext, instrumentName, {
+            soundfont: "FluidR3_GM",
+            format: "mp3",
+            notes: SOUNDFONT_NOTES,
+            nameToUrl: (name, soundfont, format) => `https://gleitz.github.io/midi-js-soundfonts/${soundfont}/${name}-${format}.js`,
+          }));
+        }
+        try {
+          return await instrumentPromises.get(instrumentName);
+        } catch (error) {
+          instrumentPromises.delete(instrumentName);
+          throw error;
+        }
+      }
+
+      async function playQuestionSound(instrument) {
+        if (!state.question) return;
+        const button = instrument === "piano" ? $("#piano-button") : $("#violin-button");
+        const instrumentName = instrument === "piano" ? "acoustic_grand_piano" : "violin";
+        button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+        try {
+          const player = await loadInstrument(instrumentName);
+          await audioContext.resume();
+          player.play(noteMidi(state.question.id) + TUNING_OFFSET_SEMITONES, undefined, { duration: instrument === "piano" ? 1.4 : 1.8 });
+        } finally {
+          button.disabled = false;
+          button.removeAttribute("aria-busy");
+        }
+      }
 
       function newQuestion() {
         const choices = NOTES.filter((note) => note.id !== state.previousId);
@@ -152,6 +238,7 @@
         $("#feedback").hidden = true;
         $("#next").hidden = true;
         $("#next").textContent = state.round === TOTAL_QUESTIONS ? "完成本輪 →" : "下一題 →";
+        updateAudioButtons();
         setNotePosition(state.question.staffPosition);
         renderOptions();
       }
@@ -246,6 +333,8 @@
         newQuestion();
       }
 
+      $("#piano-button").addEventListener("click", () => playQuestionSound("piano").catch(() => { $("#feedback").textContent = "無法播放鋼琴音色，請再試一次。"; $("#feedback").className = "feedback wrong"; $("#feedback").hidden = false; }));
+      $("#violin-button").addEventListener("click", () => playQuestionSound("violin").catch(() => { $("#feedback").textContent = "無法播放小提琴音色，請再試一次。"; $("#feedback").className = "feedback wrong"; $("#feedback").hidden = false; }));
       $("#next").addEventListener("click", nextQuestion);
       $("#restart").addEventListener("click", restart);
       newQuestion();

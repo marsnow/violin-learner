@@ -45,6 +45,11 @@
             </div>
 
             <div class="staff-frame" aria-label="待辨識的五線譜音符">
+              <div class="staff-audio-controls" role="group" aria-label="播放題目音高">
+                <span class="note-frequency" id="note-frequency" aria-live="polite">-- Hz</span>
+                <button class="staff-audio-button" id="piano-button" type="button" aria-label="播放鋼琴音色" title="播放鋼琴音色" disabled><span aria-hidden="true">🎹</span><span>鋼琴</span></button>
+                <button class="staff-audio-button" id="violin-button" type="button" aria-label="播放小提琴音色" title="播放小提琴音色" disabled><span aria-hidden="true">🎻</span><span>小提琴</span></button>
+              </div>
               <svg id="staff" viewBox="0 0 760 250" role="img" aria-labelledby="staff-title">
                 <title id="staff-title">高音譜號與待辨識音符</title>
                 <g class="staff-lines">
@@ -155,6 +160,7 @@
         </div>
       </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/soundfont-player@0.12.0/dist/soundfont-player.min.js" defer></script>
     <script src="/app.js" defer></script>
   </body>
 </html>
