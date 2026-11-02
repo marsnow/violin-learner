@@ -41,6 +41,27 @@
       .option-grid { display: grid; gap: 8px; }
       .octave-grid { grid-template-columns: repeat(5, 1fr); }
       .letter-grid { grid-template-columns: repeat(7, 1fr); }
+      .letter-group { position: relative; }
+      .label-with-info { align-items: center; display: inline-flex; gap: 7px; }
+      .info-button { align-items: center; background: #fff; border: 1.5px solid #68758a; border-radius: 50%; color: #68758a; cursor: help; display: inline-flex; font-family: Georgia, serif; font-size: 12px; font-style: italic; font-weight: 800; height: 20px; justify-content: center; padding: 0; width: 20px; }
+      .info-button:hover, .info-button[aria-expanded="true"] { background: #24344f; border-color: #24344f; color: #fff; }
+      .info-button:focus-visible { outline: 3px solid #e57d6d; outline-offset: 2px; }
+      .keyboard-popover { background: #fff; border: 1px solid #e4e0d8; border-radius: 14px; box-shadow: 0 12px 35px rgba(36, 52, 79, .18); left: 0; max-width: 100%; padding: 12px; position: absolute; top: 30px; width: 380px; z-index: 10; }
+      .keyboard-popover svg { display: block; height: auto; width: 100%; }
+      .keyboard-popover p { color: #68758a; font-size: 12px; line-height: 1.6; margin-top: 8px; }
+      .reference-panel { margin-top: 12px; }
+      .reference-panel summary { align-items: center; color: #68758a; cursor: pointer; display: flex; font-size: 13px; font-weight: 800; gap: 6px; list-style: none; padding: 6px 2px; user-select: none; }
+      .reference-panel summary::-webkit-details-marker { display: none; }
+      .reference-panel summary:hover { color: #24344f; }
+      .reference-panel summary:focus-visible { border-radius: 6px; outline: 3px solid #e57d6d; outline-offset: 2px; }
+      .reference-arrow { display: inline-block; transition: transform .15s; }
+      .reference-panel[open] .reference-arrow { transform: rotate(90deg); }
+      .reference-grid { grid-template-columns: repeat(5, 1fr); margin-top: 8px; }
+      .reference-button { background: #fff; border: 1px solid #ead9a9; border-radius: 11px; color: #8a5f12; cursor: pointer; font-size: 17px; font-weight: 800; min-height: 46px; touch-action: manipulation; }
+      .reference-button:hover:not(:disabled) { border-color: #ad7921; }
+      .reference-button:focus-visible { outline: 3px solid #e57d6d; outline-offset: 2px; }
+      .reference-button:disabled { cursor: default; opacity: .55; }
+      .reference-status { color: #68758a; font-size: 12px; margin-top: 8px; min-height: 18px; }
       button { font: inherit; }
       .option-button { background: #eef0fb; border: 1px solid transparent; border-radius: 11px; color: #24344f; cursor: pointer; font-size: 18px; font-weight: 800; min-height: 52px; touch-action: manipulation; }
       .letter-group .option-button { background: #fff5d9; }
@@ -106,8 +127,17 @@
           <div class="option-grid octave-grid" id="octave-options"></div>
         </div>
         <div class="answer-group letter-group" aria-labelledby="letter-label">
-          <div class="answer-heading"><span id="letter-label">第二行：音名（A–G）</span><span class="answer-state" id="letter-state">尚未選擇</span></div>
+          <div class="answer-heading"><span class="label-with-info"><span id="letter-label">第二行：音名（C–B）</span><button class="info-button" id="keyboard-info-button" type="button" aria-label="顯示鋼琴一個八度的鍵盤圖" aria-expanded="false" aria-controls="keyboard-popover">i</button></span><span class="answer-state" id="letter-state">尚未選擇</span></div>
+          <div class="keyboard-popover" id="keyboard-popover" role="tooltip" hidden>
+            <svg class="dd-staff dd-kb" viewBox="0 0 388 232" role="img" aria-label="鋼琴鍵：C D E F G A B C"><g font-family="Petaluma Script, cursive" text-anchor="middle"><rect x="10" y="68" width="46" height="150" rx="5" fill="#FBF7EE" stroke="#6B5A45" stroke-width="1.4"></rect><circle cx="33.0" cy="194" r="14" fill="#4A5233"></circle><text x="33.0" y="201" font-size="19" fill="#F3EDE1">C</text><rect x="56" y="68" width="46" height="150" rx="5" fill="#FBF7EE" stroke="#6B5A45" stroke-width="1.4"></rect><circle cx="79.0" cy="194" r="14" fill="#6E7B4B"></circle><text x="79.0" y="201" font-size="19" fill="#F3EDE1">D</text><rect x="102" y="68" width="46" height="150" rx="5" fill="#FBF7EE" stroke="#6B5A45" stroke-width="1.4"></rect><circle cx="125.0" cy="194" r="14" fill="#B06A3B"></circle><text x="125.0" y="201" font-size="19" fill="#F3EDE1">E</text><rect x="148" y="68" width="46" height="150" rx="5" fill="#FBF7EE" stroke="#6B5A45" stroke-width="1.4"></rect><circle cx="171.0" cy="194" r="14" fill="#C9A04A"></circle><text x="171.0" y="201" font-size="19" fill="#2E2C28">F</text><rect x="194" y="68" width="46" height="150" rx="5" fill="#FBF7EE" stroke="#6B5A45" stroke-width="1.4"></rect><circle cx="217.0" cy="194" r="14" fill="#5B6E6A"></circle><text x="217.0" y="201" font-size="19" fill="#F3EDE1">G</text><rect x="240" y="68" width="46" height="150" rx="5" fill="#FBF7EE" stroke="#6B5A45" stroke-width="1.4"></rect><circle cx="263.0" cy="194" r="14" fill="#7A5236"></circle><text x="263.0" y="201" font-size="19" fill="#F3EDE1">A</text><rect x="286" y="68" width="46" height="150" rx="5" fill="#FBF7EE" stroke="#6B5A45" stroke-width="1.4"></rect><circle cx="309.0" cy="194" r="14" fill="#2E2C28"></circle><text x="309.0" y="201" font-size="19" fill="#F3EDE1">B</text><rect x="332" y="68" width="46" height="150" rx="5" fill="#FBF7EE" stroke="#6B5A45" stroke-width="1.4"></rect><circle cx="355.0" cy="194" r="14" fill="#4A5233"></circle><text x="355.0" y="201" font-size="19" fill="#F3EDE1">C</text><rect x="42.0" y="68" width="28" height="94" rx="4" fill="#3A3530"></rect><rect x="88.0" y="68" width="28" height="94" rx="4" fill="#3A3530"></rect><rect x="180.0" y="68" width="28" height="94" rx="4" fill="#3A3530"></rect><rect x="226.0" y="68" width="28" height="94" rx="4" fill="#3A3530"></rect><rect x="272.0" y="68" width="28" height="94" rx="4" fill="#3A3530"></rect></g></svg>
+            <p>相鄰兩個白鍵之間有黑鍵 = 差一個全音（2 個半音）；E–F、B–C 之間沒有黑鍵 = 只差一個半音。</p>
+          </div>
           <div class="option-grid letter-grid" id="letter-options"></div>
+          <details class="reference-panel">
+            <summary><span class="reference-arrow" aria-hidden="true">▸</span>基準音（各八度的 C，鋼琴）</summary>
+            <div class="option-grid reference-grid" id="reference-options" role="group" aria-label="各八度 C 的鋼琴基準音"></div>
+            <p class="reference-status" id="reference-status" aria-live="polite">點擊按鈕聆聽該八度的 C，用來抓頻率範圍。</p>
+          </details>
         </div>
 
         <div class="feedback" id="feedback" aria-live="polite" hidden></div>
@@ -126,11 +156,11 @@
       const TOTAL_QUESTIONS = 10;
       const REFERENCE_FREQUENCY = 442;
       const TUNING_OFFSET_SEMITONES = 12 * Math.log2(REFERENCE_FREQUENCY / 440);
-      const NOTE_LETTERS = ["A", "B", "C", "D", "E", "F", "G"];
+      const NOTE_LETTERS = ["C", "D", "E", "F", "G", "A", "B"];
       const OCTAVES = [3, 4, 5, 6, 7];
       const NOTE_SEMITONES = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
       const SOUNDFONT_NOTES = [
-        "G3", "A3", "B3",
+        "C3", "G3", "A3", "B3",
         "C4", "D4", "E4", "F4", "G4", "A4", "B4",
         "C5", "D5", "E5", "F5", "G5", "A5", "B5",
         "C6", "D6", "E6", "F6", "G6", "A6", "B6",
@@ -152,6 +182,8 @@
         violinButton: document.querySelector("#violin-button"),
         octaveOptions: document.querySelector("#octave-options"),
         letterOptions: document.querySelector("#letter-options"),
+        referenceOptions: document.querySelector("#reference-options"),
+        referenceStatus: document.querySelector("#reference-status"),
         octaveState: document.querySelector("#octave-state"),
         letterState: document.querySelector("#letter-state"),
         feedback: document.querySelector("#feedback"),
@@ -227,6 +259,32 @@
           button.disabled = false;
           button.removeAttribute("aria-busy");
         }
+      }
+
+      function renderReferenceButtons() {
+        elements.referenceOptions.replaceChildren(...OCTAVES.map((octave) => {
+          const button = document.createElement("button");
+          button.className = "reference-button";
+          button.type = "button";
+          button.textContent = `${octave}C`;
+          button.setAttribute("aria-label", `播放 C${octave} 的鋼琴基準音`);
+          button.addEventListener("click", async () => {
+            const buttons = elements.referenceOptions.querySelectorAll("button");
+            buttons.forEach((item) => { item.disabled = true; });
+            elements.referenceStatus.textContent = "正在載入鋼琴音色…";
+            try {
+              const player = await loadInstrument("acoustic_grand_piano");
+              await audioContext.resume();
+              player.play(noteMidi(`C${octave}`) + TUNING_OFFSET_SEMITONES, undefined, { duration: 1.6 });
+              elements.referenceStatus.textContent = `已播放 ${octave}C（C${octave}）鋼琴基準音。`;
+            } catch (error) {
+              elements.referenceStatus.textContent = "無法播放鋼琴音色，請再試一次。";
+            } finally {
+              buttons.forEach((item) => { item.disabled = false; });
+            }
+          });
+          return button;
+        }));
       }
 
       function createOption(group, value, label) {
@@ -342,6 +400,29 @@
       elements.violinButton.addEventListener("click", () => playQuestionSound("violin").catch(() => { elements.audioStatus.textContent = "無法播放小提琴音色，請再試一次。"; }));
       elements.nextButton.addEventListener("click", nextQuestion);
       elements.restart.addEventListener("click", restart);
+      const keyboardInfo = {
+        button: document.querySelector("#keyboard-info-button"),
+        popover: document.querySelector("#keyboard-popover"),
+        pinned: false,
+        hovering: false,
+      };
+      function syncKeyboardPopover() {
+        const open = keyboardInfo.pinned || keyboardInfo.hovering;
+        keyboardInfo.popover.hidden = !open;
+        keyboardInfo.button.setAttribute("aria-expanded", String(open));
+      }
+      keyboardInfo.button.addEventListener("mouseenter", () => { keyboardInfo.hovering = true; syncKeyboardPopover(); });
+      keyboardInfo.button.addEventListener("mouseleave", () => { keyboardInfo.hovering = false; syncKeyboardPopover(); });
+      keyboardInfo.button.addEventListener("focus", () => { keyboardInfo.hovering = true; syncKeyboardPopover(); });
+      keyboardInfo.button.addEventListener("blur", () => { keyboardInfo.hovering = false; keyboardInfo.pinned = false; syncKeyboardPopover(); });
+      // Click/tap pins it open (touch screens have no hover); clicking again or elsewhere closes it.
+      keyboardInfo.button.addEventListener("click", () => { keyboardInfo.pinned = !keyboardInfo.pinned; keyboardInfo.hovering = false; syncKeyboardPopover(); });
+      document.addEventListener("click", (event) => {
+        if (event.target !== keyboardInfo.button && !keyboardInfo.popover.contains(event.target)) { keyboardInfo.pinned = false; syncKeyboardPopover(); }
+      });
+      document.addEventListener("keydown", (event) => { if (event.key === "Escape") { keyboardInfo.pinned = false; keyboardInfo.hovering = false; syncKeyboardPopover(); } });
+
+      renderReferenceButtons();
       newQuestion();
     </script>
   </body>
